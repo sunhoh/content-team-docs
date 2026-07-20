@@ -1,0 +1,6 @@
+{
+    "title": "API",
+    "description": "Content Team Server REST API 레퍼런스",
+    "icon": "Computer",
+    "pages": ["auth", "post", "poster"]
+}

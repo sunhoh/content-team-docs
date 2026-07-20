@@ -1,0 +1,56 @@
+---
+title: Auth
+description: API 키 유효성을 검증하는 엔드포인트
+---
+
+## POST /api/auth/verify
+
+API 키가 유효한지 확인합니다.
+
+### 요청
+
+**Headers**
+
+| 이름            | 필수 | 설명                          |
+| --------------- | ---- | ----------------------------- |
+| `Authorization` | ✓    | `Bearer {API_KEY}` 형식       |
+| `Content-Type`  | ✓    | `application/json`            |
+
+**Body**
+
+없음
+
+### 응답
+
+**성공 (200)**
+
+```json
+{
+  "success": true
+}
+```
+
+**실패 — API 키 누락 (401)**
+
+```json
+{
+  "success": false,
+  "error": "Missing API key"
+}
+```
+
+**실패 — 유효하지 않은 키 (500)**
+
+```json
+{
+  "success": false,
+  "error": "..."
+}
+```
+
+### 예시
+
+```bash
+curl -X POST https://{host}/api/auth/verify \
+  -H "Authorization: Bearer $API_KEY"
+```

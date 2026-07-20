@@ -1,0 +1,113 @@
+---
+title: Poster
+description: 포스터 샘플 이미지를 생성하는 엔드포인트
+---
+
+## POST /api/poster/generate
+
+주제와 테넌트 정보를 받아 포스터 스펙을 설계하고 DALL-E 3으로 샘플 PNG 이미지를 생성합니다.
+
+내부적으로 `poster-designer` 에이전트가 스펙(사이즈·색상·카피·레이아웃)을 결정한 뒤 DALL-E 3 API를 호출합니다.
+
+### 요청
+
+**Headers**
+
+| 이름            | 필수 | 설명                    |
+| --------------- | ---- | ----------------------- |
+| `Authorization` | ✓    | `Bearer {API_KEY}` 형식 |
+| `Content-Type`  | ✓    | `application/json`      |
+
+**Body**
+
+| 필드         | 타입     | 필수 | 기본값     | 설명                                                              |
+| ------------ | -------- | ---- | ---------- | ----------------------------------------------------------------- |
+| `topic`      | `string` | ✓    | —          | 포스터 주제 또는 키워드                                           |
+| `tenant`     | `string` | ✓    | —          | 테넌트 슬러그. `gu-clinic` \| `luho`                              |
+| `posterType` | `string` |      | `vertical` | 포스터 유형. `vertical` \| `square` \| `horizontal` \| `a4`      |
+| `language`   | `string` |      | `ko`       | 언어. `ko` \| `en`                                                |
+| `purpose`    | `string` |      | —          | 추가 목적 또는 지시사항                                           |
+
+**posterType 별 DALL-E 3 사이즈 매핑**
+
+| posterType   | DALL-E 3 사이즈 |
+| ------------ | --------------- |
+| `vertical`   | `1024x1792`     |
+| `square`     | `1024x1024`     |
+| `horizontal` | `1792x1024`     |
+| `a4`         | `1024x1792`     |
+
+### 응답
+
+**성공 (200)**
+
+```json
+{
+  "success": true,
+  "data": {
+    "spec": {
+      "size": "1080x1920px",
+      "layoutType": "A",
+      "colorPalette": {
+        "background": "#0A1628",
+        "primary": "#C9A96E",
+        "accent": "#E8C88A",
+        "text": "#F5F0E8"
+      },
+      "headlineCopy": "헤드카피 텍스트",
+      "subCopy": "서브카피 텍스트",
+      "cta": "CTA 텍스트"
+    },
+    "imagePrompt": "DALL-E 3에 전달된 영문 프롬프트",
+    "imageUrl": "https://..."
+  }
+}
+```
+
+| 필드              | 타입     | 설명                                              |
+| ----------------- | -------- | ------------------------------------------------- |
+| `spec.layoutType` | `string` | 레이아웃 타입. `A` \| `B` \| `C` \| `D`          |
+| `spec.colorPalette` | `object` | Background / Primary / Accent / Text HEX 코드   |
+| `imageUrl`        | `string` | DALL-E 3이 생성한 샘플 PNG의 임시 URL (1시간 유효) |
+
+**실패 — 유효성 오류 (400)**
+
+```json
+{
+  "success": false,
+  "error": "Invalid enum value. ..."
+}
+```
+
+**실패 — API 키 누락 (401)**
+
+```json
+{
+  "success": false,
+  "error": "Missing API key"
+}
+```
+
+**실패 — DALL-E 3 오류 (500)**
+
+```json
+{
+  "success": false,
+  "error": "DALL-E 3 API error 400: ..."
+}
+```
+
+### 예시
+
+```bash
+curl -X POST https://{host}/api/poster/generate \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic": "여름 이벤트 프로모션",
+    "tenant": "gu-clinic",
+    "posterType": "vertical",
+    "language": "ko",
+    "purpose": "인스타그램 스토리용"
+  }'
+```

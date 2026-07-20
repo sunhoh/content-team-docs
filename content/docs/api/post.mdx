@@ -1,0 +1,77 @@
+---
+title: Post
+description: 블로그 포스트를 생성하는 엔드포인트
+---
+
+## POST /api/post/generate
+
+주제와 테넌트 정보를 받아 블로그 본문과 이미지 프롬프트를 생성합니다.
+
+내부적으로 `researcher → writer → image-maker` 3단계를 순서대로 실행합니다.
+
+### 요청
+
+**Headers**
+
+| 이름            | 필수 | 설명                    |
+| --------------- | ---- | ----------------------- |
+| `Authorization` | ✓    | `Bearer {API_KEY}` 형식 |
+| `Content-Type`  | ✓    | `application/json`      |
+
+**Body**
+
+| 필드       | 타입     | 필수 | 기본값   | 설명                                                                 |
+| ---------- | -------- | ---- | -------- | -------------------------------------------------------------------- |
+| `topic`    | `string` | ✓    | —        | 블로그 주제 또는 키워드                                              |
+| `tenant`   | `string` | ✓    | —        | 테넌트 슬러그. `gu-clinic` \| `luho`                                 |
+| `platform` | `string` |      | `naver`  | 발행 플랫폼. `naver` \| `google`                                     |
+| `language` | `string` |      | `ko`     | 언어. `ko` \| `en`                                                   |
+| `persona`  | `string` |      | —        | 글쓰기 페르소나. `review` \| `educational` \| `comparison` \| `essay` \| `card` |
+| `purpose`  | `string` |      | —        | 추가 목적 또는 지시사항                                              |
+
+### 응답
+
+**성공 (200)**
+
+```json
+{
+  "success": true,
+  "data": {
+    "content": "블로그 본문 텍스트 (마크다운)",
+    "imagePrompts": "이미지 프롬프트 목록"
+  }
+}
+```
+
+**실패 — 유효성 오류 (400)**
+
+```json
+{
+  "success": false,
+  "error": "Invalid enum value. ..."
+}
+```
+
+**실패 — API 키 누락 (401)**
+
+```json
+{
+  "success": false,
+  "error": "Missing API key"
+}
+```
+
+### 예시
+
+```bash
+curl -X POST https://{host}/api/post/generate \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic": "피부 레이저 시술 효과",
+    "tenant": "gu-clinic",
+    "platform": "naver",
+    "language": "ko",
+    "persona": "educational"
+  }'
+```
